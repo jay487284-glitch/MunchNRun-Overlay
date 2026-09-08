@@ -1,34 +1,9 @@
-:root {
-  color-scheme: dark;
-  --scale: 1;
-  --yellow: #f6d63f;
-  --panel: rgba(13, 17, 26, .90);
-}
-
+:root { --scale: 1; }
 * { box-sizing: border-box; }
-html, body { width: 100%; min-height: 100%; margin: 0; overflow: hidden; background: transparent !important; }
-body { font-family: Inter, "Segoe UI", Arial, sans-serif; color: #f7f8fb; }
-#overlay { display: inline-flex; flex-direction: column; gap: 8px; padding: 10px; transform: scale(var(--scale)); transform-origin: top left; }
-#title { margin: 0 0 2px; color: var(--yellow); font-size: 27px; line-height: 1; letter-spacing: .05em; text-shadow: 0 2px 7px #000; }
-#cards { display: flex; gap: 9px; align-items: flex-start; }
-#cards.vertical { flex-direction: column; }
-#cards.compact { flex-direction: column; gap: 5px; }
-.trigger-card { min-width: 250px; height: 88px; display: flex; align-items: center; gap: 13px; padding: 9px 15px 9px 9px; border: 2px solid var(--yellow); border-radius: 15px; background: var(--panel); box-shadow: 0 5px 18px rgba(0,0,0,.42); }
-.vertical .trigger-card { min-width: 330px; }
-.compact .trigger-card { min-width: 280px; height: 65px; border-radius: 12px; padding: 6px 12px 6px 7px; }
-.icon-only .trigger-card { min-width: 84px; width: 84px; padding: 7px; justify-content: center; }
-.icon-only .copy { display: none; }
-.icon-slot { width: 66px; height: 66px; flex: 0 0 66px; display: grid; place-items: center; position: relative; }
-.compact .icon-slot { width: 52px; height: 52px; flex-basis: 52px; }
-.gift-image { width: 62px; height: 62px; object-fit: contain; filter: drop-shadow(0 2px 4px #000); }
-.fallback-gift { width: 48px; height: 48px; transform: rotate(45deg); border: 2px solid #fff; background: var(--hunter, var(--yellow)); border-radius: 8px; }
-.gift-count { position: absolute; right: -4px; bottom: 0; padding: 2px 5px; border-radius: 8px; color: #fff; background: #111827; font-size: 15px; font-weight: 800; }
-.heart { width: 62px; height: 55px; position: relative; display: grid; place-items: center; margin-top: 7px; }
-.heart::before { content: "♥"; position: absolute; inset: -16px 0 0; color: #ff415b; font-size: 78px; line-height: 1; filter: drop-shadow(0 2px 4px #000); }
-.heart span { z-index: 1; margin-top: -2px; color: #fff; font-size: 17px; font-weight: 900; text-shadow: 0 1px 3px #8a0014; }
-.follow-icon { width: 62px; height: 62px; filter: drop-shadow(0 2px 4px #000); }
-.copy { min-width: 0; display: flex; flex-direction: column; gap: 5px; }
-.label { color: var(--yellow); font-size: 20px; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.action { color: #fff; font-size: 19px; font-weight: 750; line-height: 1.15; white-space: nowrap; }
-.compact .label { font-size: 17px; }
-.compact .action { font-size: 16px; }
+html, body { margin: 0; min-height: 100%; background: transparent !important; }
+body { font-family: Arial, sans-serif; }
+#overlay { display: inline-flex; flex-direction: column; padding: 4px; gap: 4px; transform: scale(var(--scale)); transform-origin: top left; }
+#title { margin: 0; color: #ffe05b; font-size: 24px; text-shadow: 0 1px 2px #000; }
+#title[hidden] { display: none; }
+#cards { display: flex; flex-direction: row; flex-wrap: nowrap; gap: 2px; align-items: flex-start; }
+.trigger-card { display: block; flex: none; background: transparent; }

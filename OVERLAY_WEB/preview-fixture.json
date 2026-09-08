@@ -1,0 +1,495 @@
+{
+  "schema": 2,
+  "title": "MUNCH 'N RUN LIVE",
+  "show_title": false,
+  "layout": "horizontal",
+  "display_mode": "icon_text",
+  "scale_percent": 100,
+  "cards": [
+    {
+      "mapping_id": "Rose",
+      "event_type": "gift",
+      "label": "Rose",
+      "gift_name": "Rose",
+      "gift_id": "",
+      "gift_image_url": "",
+      "gift_reference": {
+        "file": "gift-reference.png",
+        "rect": [
+          548,
+          140,
+          61,
+          60
+        ],
+        "white_background": true
+      },
+      "effects": [
+        {
+          "action": "spawn_enemy",
+          "amount": 1,
+          "hunter_type": "red"
+        }
+      ],
+      "render_plan": {
+        "width": 100,
+        "height": 180,
+        "amount_label": "1x",
+        "icons": [
+          {
+            "file": "RedHunter.png",
+            "rect": [
+              8,
+              34,
+              84,
+              91
+            ],
+            "action": "spawn_enemy",
+            "amount": 1
+          }
+        ],
+        "win_only": false,
+        "amount_color": "#ffffff"
+      },
+      "trigger_count": 1,
+      "action": "spawn_enemy",
+      "action_text": "Spawn 1 Red Hunter",
+      "hunter_type": "red"
+    },
+    {
+      "mapping_id": "Doughnut",
+      "event_type": "gift",
+      "label": "Doughnut",
+      "gift_name": "Doughnut",
+      "gift_id": "",
+      "gift_image_url": "",
+      "gift_reference": {
+        "file": "gift-reference.png",
+        "rect": [
+          840,
+          140,
+          59,
+          60
+        ],
+        "white_background": true
+      },
+      "effects": [
+        {
+          "action": "spawn_enemy",
+          "amount": 10,
+          "hunter_type": "red"
+        },
+        {
+          "action": "spawn_enemy",
+          "amount": 10,
+          "hunter_type": "pink"
+        },
+        {
+          "action": "spawn_enemy",
+          "amount": 10,
+          "hunter_type": "cyan"
+        },
+        {
+          "action": "spawn_enemy",
+          "amount": 10,
+          "hunter_type": "orange"
+        }
+      ],
+      "render_plan": {
+        "width": 100,
+        "height": 180,
+        "amount_label": "40x",
+        "icons": [
+          {
+            "file": "RedHunter.png",
+            "rect": [
+              8,
+              53,
+              55,
+              59
+            ],
+            "action": "spawn_enemy",
+            "amount": 10
+          },
+          {
+            "file": "PinkHunter.png",
+            "rect": [
+              41,
+              53,
+              55,
+              59
+            ],
+            "action": "spawn_enemy",
+            "amount": 10
+          },
+          {
+            "file": "CyanHunter.png",
+            "rect": [
+              25,
+              32,
+              55,
+              59
+            ],
+            "action": "spawn_enemy",
+            "amount": 10
+          },
+          {
+            "file": "OrangeHunter.png",
+            "rect": [
+              25,
+              70,
+              55,
+              59
+            ],
+            "action": "spawn_enemy",
+            "amount": 10
+          }
+        ],
+        "win_only": false,
+        "amount_color": "#ffffff"
+      },
+      "trigger_count": 1,
+      "action": "custom_bundle",
+      "action_text": "Spawn 10 Red Hunters + Spawn 10 Pink Hunters + Spawn 10 Cyan Hunters + Spawn 10 Orange Hunters",
+      "hunter_type": "red"
+    },
+    {
+      "mapping_id": "Heart_Me",
+      "event_type": "gift",
+      "label": "Heart Me",
+      "gift_name": "Heart Me",
+      "gift_id": "",
+      "gift_image_url": "",
+      "gift_reference": {
+        "file": "gift-reference.png",
+        "rect": [
+          235,
+          140,
+          63,
+          60
+        ],
+        "white_background": true
+      },
+      "effects": [
+        {
+          "action": "spawn_enemy",
+          "amount": 5,
+          "hunter_type": "pink"
+        },
+        {
+          "action": "add_dots",
+          "amount": 30,
+          "hunter_type": "red"
+        }
+      ],
+      "render_plan": {
+        "width": 100,
+        "height": 180,
+        "amount_label": "5/30x",
+        "icons": [
+          {
+            "file": "PinkHunter.png",
+            "rect": [
+              7,
+              33,
+              65,
+              70
+            ],
+            "action": "spawn_enemy",
+            "amount": 5
+          },
+          {
+            "file": "AddFruits.png",
+            "rect": [
+              35,
+              66,
+              62,
+              66
+            ],
+            "action": "add_dots",
+            "amount": 30
+          }
+        ],
+        "win_only": false,
+        "amount_color": "#ffffff"
+      },
+      "trigger_count": 1,
+      "action": "custom_bundle",
+      "action_text": "Spawn 5 Pink Hunters + +30 Munchies",
+      "hunter_type": "red"
+    },
+    {
+      "mapping_id": "likes_500",
+      "event_type": "like",
+      "label": "LIKES / TAPTAP",
+      "gift_name": "",
+      "gift_id": "",
+      "gift_image_url": "",
+      "gift_reference": null,
+      "effects": [
+        {
+          "action": "remove_dots",
+          "amount": 5,
+          "hunter_type": "red"
+        }
+      ],
+      "render_plan": {
+        "width": 100,
+        "height": 180,
+        "amount_label": "5x",
+        "icons": [
+          {
+            "file": "RemoveFruits.png",
+            "rect": [
+              8,
+              34,
+              84,
+              91
+            ],
+            "action": "remove_dots",
+            "amount": 5
+          }
+        ],
+        "win_only": false,
+        "amount_color": "#ffffff"
+      },
+      "trigger_count": 500,
+      "action": "remove_dots",
+      "action_text": "-5 Munchies",
+      "hunter_type": "red"
+    },
+    {
+      "mapping_id": "follow",
+      "event_type": "follow",
+      "label": "FOLLOW",
+      "gift_name": "",
+      "gift_id": "",
+      "gift_image_url": "",
+      "gift_reference": null,
+      "effects": [
+        {
+          "action": "spawn_enemy",
+          "amount": 1,
+          "hunter_type": "red"
+        },
+        {
+          "action": "add_dots",
+          "amount": 5,
+          "hunter_type": "red"
+        }
+      ],
+      "render_plan": {
+        "width": 100,
+        "height": 180,
+        "amount_label": "1/5x",
+        "icons": [
+          {
+            "file": "RedHunter.png",
+            "rect": [
+              7,
+              33,
+              65,
+              70
+            ],
+            "action": "spawn_enemy",
+            "amount": 1
+          },
+          {
+            "file": "AddFruits.png",
+            "rect": [
+              35,
+              66,
+              62,
+              66
+            ],
+            "action": "add_dots",
+            "amount": 5
+          }
+        ],
+        "win_only": false,
+        "amount_color": "#ffffff"
+      },
+      "trigger_count": 1,
+      "action": "custom_bundle",
+      "action_text": "Spawn 1 Red Hunter + +5 Munchies",
+      "hunter_type": "red"
+    },
+    {
+      "mapping_id": "likes_100",
+      "event_type": "like",
+      "label": "LIKES / TAPTAP",
+      "gift_name": "",
+      "gift_id": "",
+      "gift_image_url": "",
+      "gift_reference": null,
+      "effects": [
+        {
+          "action": "add_dots",
+          "amount": 5,
+          "hunter_type": "red"
+        }
+      ],
+      "render_plan": {
+        "width": 100,
+        "height": 180,
+        "amount_label": "5x",
+        "icons": [
+          {
+            "file": "AddFruits.png",
+            "rect": [
+              8,
+              34,
+              84,
+              91
+            ],
+            "action": "add_dots",
+            "amount": 5
+          }
+        ],
+        "win_only": false,
+        "amount_color": "#ffffff"
+      },
+      "trigger_count": 100,
+      "action": "add_dots",
+      "action_text": "+5 Munchies",
+      "hunter_type": "red"
+    },
+    {
+      "mapping_id": "likes_1000",
+      "event_type": "like",
+      "label": "LIKES / TAPTAP",
+      "gift_name": "",
+      "gift_id": "",
+      "gift_image_url": "",
+      "gift_reference": null,
+      "effects": [
+        {
+          "action": "spawn_power",
+          "amount": 1,
+          "hunter_type": "red"
+        }
+      ],
+      "render_plan": {
+        "width": 100,
+        "height": 180,
+        "amount_label": "1x",
+        "icons": [
+          {
+            "file": "AddPower.png",
+            "rect": [
+              8,
+              34,
+              84,
+              91
+            ],
+            "action": "spawn_power",
+            "amount": 1
+          }
+        ],
+        "win_only": false,
+        "amount_color": "#ffffff"
+      },
+      "trigger_count": 1000,
+      "action": "spawn_power",
+      "action_text": "+1 Power Bite",
+      "hunter_type": "red"
+    },
+    {
+      "mapping_id": "Confetti",
+      "event_type": "gift",
+      "label": "Confetti",
+      "gift_name": "Confetti",
+      "gift_id": "",
+      "gift_image_url": "",
+      "gift_reference": {
+        "file": "win-gift-reference.png",
+        "rect": [
+          0,
+          103,
+          91,
+          97
+        ],
+        "white_background": true
+      },
+      "effects": [
+        {
+          "action": "win_change",
+          "amount": 5,
+          "hunter_type": "red"
+        }
+      ],
+      "render_plan": {
+        "width": 100,
+        "height": 180,
+        "amount_label": "+5",
+        "icons": [
+          {
+            "file": null,
+            "rect": [
+              8,
+              34,
+              84,
+              91
+            ],
+            "action": "win_change",
+            "amount": 5
+          }
+        ],
+        "win_only": true,
+        "amount_color": "#ffe05b"
+      },
+      "trigger_count": 1,
+      "action": "win_change",
+      "action_text": "+5 WIN",
+      "hunter_type": "red"
+    },
+    {
+      "mapping_id": "Galaxy",
+      "event_type": "gift",
+      "label": "Galaxy",
+      "gift_name": "Galaxy",
+      "gift_id": "",
+      "gift_image_url": "",
+      "gift_reference": {
+        "file": "win-gift-reference.png",
+        "rect": [
+          863,
+          103,
+          98,
+          97
+        ],
+        "white_background": true
+      },
+      "effects": [
+        {
+          "action": "win_change",
+          "amount": -50,
+          "hunter_type": "red"
+        }
+      ],
+      "render_plan": {
+        "width": 100,
+        "height": 180,
+        "amount_label": "-50",
+        "icons": [
+          {
+            "file": null,
+            "rect": [
+              8,
+              34,
+              84,
+              91
+            ],
+            "action": "win_change",
+            "amount": -50
+          }
+        ],
+        "win_only": true,
+        "amount_color": "#ff333d"
+      },
+      "trigger_count": 1,
+      "action": "win_change",
+      "action_text": "-50 WIN",
+      "hunter_type": "red"
+    }
+  ]
+}
