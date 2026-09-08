@@ -89,7 +89,7 @@
       const response = await fetch(`${api}/rest/v1/rpc/read_mnr_overlay`, {
         method: "POST",
         cache: "no-store",
-        headers: { "apikey": anon, "Authorization": `Bearer ${anon}`, "Content-Type": "application/json" },
+        headers: { "apikey": anon, "Content-Type": "application/json" },
         body: JSON.stringify({ p_channel_id: channel, p_read_token: read })
       });
       if (!response.ok) return;
