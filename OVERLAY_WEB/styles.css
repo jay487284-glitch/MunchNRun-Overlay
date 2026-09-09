@@ -1,9 +1,8 @@
-:root { --scale: 1; }
 * { box-sizing: border-box; }
-html, body { margin: 0; min-height: 100%; background: transparent !important; }
+html, body { margin: 0; min-height: 100%; background: transparent; overflow: hidden; }
 body { font-family: Arial, sans-serif; }
-#overlay { display: inline-flex; flex-direction: column; padding: 4px; gap: 4px; transform: scale(var(--scale)); transform-origin: top left; }
-#title { margin: 0; color: #ffe05b; font-size: 24px; text-shadow: 0 1px 2px #000; }
+#overlay { position: relative; overflow: hidden; background: transparent; }
+#title { position: absolute; inset: 0 4px auto; height: 32px; margin: 0; color: #ffe05b; font-size: 22px; line-height: 32px; text-align: center; text-shadow: 0 1px 2px #000; white-space: nowrap; overflow: hidden; }
 #title[hidden] { display: none; }
-#cards { display: flex; flex-direction: row; flex-wrap: nowrap; gap: 2px; align-items: flex-start; }
-.trigger-card { display: block; flex: none; background: transparent; }
+#cards { position: absolute; inset: 0; }
+.trigger-card { position: absolute; display: block; background: transparent; }

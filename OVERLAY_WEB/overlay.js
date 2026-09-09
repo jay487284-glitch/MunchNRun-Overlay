@@ -6,9 +6,7 @@
   const root = document.getElementById("overlay"), cards = document.getElementById("cards"), title = document.getElementById("title");
   const images = new Map();
   const manifestPromise = fetch("assets/manifest.json").then(r => { if(!r.ok) throw Error(`Artwork manifest HTTP ${r.status}`); return r.json(); });
-  let lastPayload = "", generation = 0, requestedScale = 1, revision = null, refreshing = false, legacyRead = false, currentPayload = null;
-  function fitViewport(){const naturalWidth=cards.scrollWidth+8;root.style.setProperty("--scale",String(Math.min(requestedScale,Math.max(.1,window.innerWidth/naturalWidth))));}
-  window.addEventListener("resize",fitViewport);
+  let lastPayload = "", generation = 0, revision = null, refreshing = false, legacyRead = false, currentPayload = null;
   const publicImage = value => { try {const u=new URL(value); return u.protocol === "https:" && !["localhost","127.0.0.1","[::1]"].includes(u.hostname);} catch {return false;} };
 
   function image(src) {
@@ -60,12 +58,14 @@
     else positions=[[8,34,84,91]];
     return {width,height:180,amount_label:value+(win||!effects.length?"":"x"),win_only:win,amount_color:win?(effects[0].amount<0?"#ff333d":"#ffe05b"):"#ffffff",icons:ordered.map((e,i)=>({file:typeof manifest.actions[e.action]==="object"?manifest.actions[e.action][e.hunter_type]:manifest.actions[e.action],rect:positions[i],action:e.action,amount:e.amount}))};
   }
-  async function drawCard(card,manifest,giftImages={}) {
+  async function drawCard(card,manifest,giftImages={},box={x:0,y:0,width:100,height:180}) {
     const effects=card.effects||legacyEffects(card),plan=card.render_plan||makePlan(effects,manifest);
-    const c=document.createElement("canvas");c.className="trigger-card";c.width=plan.width*3;c.height=540;c.style.width=`${plan.width}px`;c.style.height="180px";
+    const c=document.createElement("canvas"),dpr=Math.max(1,Math.min(3,window.devicePixelRatio||1)),scale=box.height/180;
+    c.className="trigger-card";c.width=Math.ceil(box.width*dpr);c.height=Math.ceil(box.height*dpr);
+    Object.assign(c.style,{left:`${box.x}px`,top:`${box.y}px`,width:`${box.width}px`,height:`${box.height}px`});
     c.setAttribute("aria-label",`${card.label||card.event_type}: ${plan.amount_label}; ${card.action_text||""}`);
     c.dataset.amount=plan.amount_label;c.dataset.eventType=card.event_type;c.dataset.mappingId=card.mapping_id||"";
-    const ctx=c.getContext("2d");ctx.scale(3,3);textFit(ctx,plan.amount_label,[3,plan.win_only?25:0,plan.width-6,plan.win_only?40:31],plan.amount_color,plan.win_only?30:25);
+    const ctx=c.getContext("2d");ctx.scale(dpr,dpr);ctx.translate((box.width-plan.width*scale)/2,0);ctx.scale(scale,scale);textFit(ctx,plan.amount_label,[3,plan.win_only?25:0,plan.width-6,plan.win_only?40:31],plan.amount_color,plan.win_only?30:25);
     for(const icon of plan.icons){
       if(icon.file)contain(ctx,await image(`assets/${icon.file}`),icon.rect);
       else if(icon.action!=="win_change")textFit(ctx,"?",icon.rect,"#ffe05b",20);
@@ -92,15 +92,27 @@
     }
     return c;
   }
+  function compactLayout(payload) {
+    const s=payload.overlay_settings||{},number=(value,fallback)=>Number.isFinite(Number(value))?Number(value):fallback,width=Math.max(240,Math.min(1920,number(s.overlay_width,720)));
+    const icon=Math.max(28,Math.min(96,number(s.icon_size,48))),cg=Math.max(0,number(s.column_gap,8)),rg=Math.max(0,number(s.row_gap,8)),manual=Math.max(0,number(s.cards_per_row,0));
+    const positions=[];let x=0,y=payload.show_title?32:0,row=0,inRow=0,rowHeight=0;const counts=[];
+    for(const card of (payload.cards||[])){const p=card.render_plan||{width:100},ratio=icon/84,w=Math.min(width,Math.max(icon+4,Math.ceil(Math.max(70,Number(p.width)||100)*ratio))),h=Math.max(62,Math.ceil(180*ratio));
+      if((manual&&inRow>=manual)||(inRow&&x+w>width)){counts.push(inRow);y+=rowHeight+rg;row++;x=0;inRow=0;rowHeight=0;}
+      positions.push({x,y,width:w,height:h,row});x+=w+cg;rowHeight=Math.max(rowHeight,h);inRow++;
+    }
+    if(inRow)counts.push(inRow);return {width,height:Math.max(1,y+rowHeight),rows:counts.length,cards:positions.length,row_counts:counts,positions,title_height:payload.show_title?32:0};
+  }
   async function render(payload) {
     const serialized=JSON.stringify(payload);if(serialized===lastPayload)return;
     const token=++generation,manifest=await manifestPromise;
-    const nodes=await Promise.all((Array.isArray(payload.cards)?payload.cards:[]).map(card=>drawCard(card,manifest,payload.gift_images||{})));
+    const layout=compactLayout(payload),list=Array.isArray(payload.cards)?payload.cards:[];
+    const nodes=await Promise.all(list.map((card,index)=>drawCard(card,manifest,payload.gift_images||{},layout.positions[index])));
     if(token!==generation)return;
     lastPayload=nodes.some(n=>n.dataset.giftImage==="missing")?"":serialized;
-    requestedScale=Math.max(.5,Math.min(2,Number(payload.scale_percent||100)/100));
     title.hidden=!payload.show_title||!payload.title;title.textContent=payload.title||"";
-    cards.replaceChildren(...nodes);fitViewport();root.dataset.ready="true";root.dataset.artworkReady=String(!nodes.some(n=>n.dataset.giftImage==="missing"));
+    Object.assign(root.style,{width:`${layout.width}px`,height:`${layout.height}px`,background:(payload.overlay_settings||{}).background_mode==="custom"?((payload.overlay_settings||{}).background_color||"#101827"):"transparent"});
+    root.dataset.outputWidth=String(layout.width);root.dataset.outputHeight=String(layout.height);root.dataset.rows=String(layout.rows);root.dataset.cards=String(layout.cards);
+    cards.replaceChildren(...nodes);root.dataset.ready="true";root.dataset.artworkReady=String(!nodes.some(n=>n.dataset.giftImage==="missing"));
   }
   async function refresh() {
     if(refreshing||!publicImage(api)||!anon||!channel||!read)return;
