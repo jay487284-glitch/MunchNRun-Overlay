@@ -29,23 +29,6 @@
     ctx.lineJoin="round";ctx.lineWidth=2;ctx.strokeStyle="#1b1614";ctx.fillStyle=color;
     if(outline)ctx.strokeText(text,x+w/2,y+h/2);ctx.fillText(text,x+w/2,y+h/2);
   }
-  async function referenceImage(ref) {
-    const key=JSON.stringify(ref);
-    if(images.has(key))return images.get(key);
-    const promise=(async()=>{
-      const img=await image(`assets/${ref.file}`),[x,y,w,h]=ref.rect;
-      const c=document.createElement("canvas");c.width=w;c.height=h;const ctx=c.getContext("2d");ctx.drawImage(img,x,y,w,h,0,0,w,h);
-      if(ref.white_background){
-        const data=ctx.getImageData(0,0,w,h),p=data.data,seen=new Uint8Array(w*h),queue=[];
-        for(let x=0;x<w;x++){queue.push([x,0],[x,h-1]);}for(let y=0;y<h;y++){queue.push([0,y],[w-1,y]);}
-        for(let i=0;i<queue.length;i++){
-          const [x,y]=queue[i];if(x<0||y<0||x>=w||y>=h)continue;const index=y*w+x;if(seen[index])continue;seen[index]=1;
-          const j=index*4,min=Math.min(p[j],p[j+1],p[j+2]),max=Math.max(p[j],p[j+1],p[j+2]);if(min<238||max-min>18)continue;
-          p[j+3]=0;queue.push([x-1,y],[x+1,y],[x,y-1],[x,y+1]);
-        }ctx.putImageData(data,0,0);
-      }return c;
-    })();images.set(key,promise);return promise;
-  }
   function heart(ctx,rect,count) {
     const [x,y,w,h]=rect;ctx.save();ctx.translate(x,y);ctx.scale(w/240,h/216);ctx.beginPath();
     for(let i=0;i<=120;i++){const t=i*2*Math.PI/120,px=120+7*(16*Math.sin(t)**3),py=99-6.4*(13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t));i?ctx.lineTo(px,py):ctx.moveTo(px,py);}
@@ -77,7 +60,7 @@
     else positions=[[8,34,84,91]];
     return {width,height:180,amount_label:value+(win||!effects.length?"":"x"),win_only:win,amount_color:win?(effects[0].amount<0?"#ff333d":"#ffe05b"):"#ffffff",icons:ordered.map((e,i)=>({file:typeof manifest.actions[e.action]==="object"?manifest.actions[e.action][e.hunter_type]:manifest.actions[e.action],rect:positions[i],action:e.action,amount:e.amount}))};
   }
-  async function drawCard(card,manifest) {
+  async function drawCard(card,manifest,giftImages={}) {
     const effects=card.effects||legacyEffects(card),plan=card.render_plan||makePlan(effects,manifest);
     const c=document.createElement("canvas");c.className="trigger-card";c.width=plan.width*3;c.height=540;c.style.width=`${plan.width}px`;c.style.height="180px";
     c.setAttribute("aria-label",`${card.label||card.event_type}: ${plan.amount_label}; ${card.action_text||""}`);
@@ -92,23 +75,27 @@
     else if(card.event_type==="follow")contain(ctx,await image("assets/follow.png"),bottom);
     else {
       let gift=null;
-      if(publicImage(card.gift_image_url)){try{gift=await image(card.gift_image_url);}catch{console.warn(`Gift image unavailable: ${card.gift_name||"gift"}; using bundled reference`);}}
-      const ref=card.gift_reference||manifest.gifts[String(card.gift_name||"").trim().toLowerCase()];
-      if(!gift&&ref)gift=await referenceImage(ref);
-      if(gift){contain(ctx,gift,bottom);c.dataset.giftImage="loaded";}
-      else {textFit(ctx,card.gift_name||"GIFT",bottom,"#ffe05b",11);c.dataset.giftImage="missing";console.warn(`Missing gift artwork: ${card.gift_name||"unnamed"}`);}
+      const data=giftImages[card.gift_image_key];
+      if(card.gift_id && typeof data==="string" && data.length<=25000 && /^data:image\/png;base64,[A-Za-z0-9+/]+=*$/.test(data)) {
+        try {gift=await image(data);}catch {console.warn(`Cached gift PNG could not load: ID ${card.gift_id}`);}
+      }
+      if(gift){contain(ctx,gift,bottom);c.dataset.giftImage="loaded";c.dataset.giftId=card.gift_id;}
+      else {
+        textFit(ctx,"IMAGE MISSING",bottom,"#ff6868",9);c.dataset.giftImage="missing";
+        console.warn(`Missing gift artwork: ${card.gift_name||"unnamed"} (ID ${card.gift_id||"missing"}). Sync gifts and Publish again.`);
+      }
     }
     return c;
   }
   async function render(payload) {
     const serialized=JSON.stringify(payload);if(serialized===lastPayload)return;
     const token=++generation,manifest=await manifestPromise;
-    const nodes=await Promise.all((Array.isArray(payload.cards)?payload.cards:[]).map(card=>drawCard(card,manifest)));
+    const nodes=await Promise.all((Array.isArray(payload.cards)?payload.cards:[]).map(card=>drawCard(card,manifest,payload.gift_images||{})));
     if(token!==generation)return;
     lastPayload=serialized;
     requestedScale=Math.max(.5,Math.min(2,Number(payload.scale_percent||100)/100));
     title.hidden=!payload.show_title||!payload.title;title.textContent=payload.title||"";
-    cards.replaceChildren(...nodes);fitViewport();root.dataset.ready="true";
+    cards.replaceChildren(...nodes);fitViewport();root.dataset.ready="true";root.dataset.artworkReady=String(!nodes.some(n=>n.dataset.giftImage==="missing"));
   }
   async function refresh() {
     if(!publicImage(api)||!anon||!channel||!read)return;
@@ -118,7 +105,5 @@
       const payload=await response.json();if(payload&&typeof payload==="object")await render(payload);
     }catch(error){console.warn("Overlay refresh unavailable:",error.message);}
   }
-  // Explicit offline fixture page, used for visual checks; no live credentials or writes.
-  if(params.get("preview")==="1")fetch("preview-fixture.json").then(r=>r.json()).then(render).catch(e=>console.error(e.message));
-  else {refresh();setInterval(refresh, 2000);}
+  refresh();setInterval(refresh, 2000);
 })();
