@@ -6,7 +6,7 @@
   const root = document.getElementById("overlay"), cards = document.getElementById("cards"), title = document.getElementById("title");
   const images = new Map();
   const manifestPromise = fetch("assets/manifest.json").then(r => { if(!r.ok) throw Error(`Artwork manifest HTTP ${r.status}`); return r.json(); });
-  let lastPayload = "", generation = 0, requestedScale = 1;
+  let lastPayload = "", generation = 0, requestedScale = 1, revision = null, refreshing = false, legacyRead = false, currentPayload = null;
   function fitViewport(){const naturalWidth=cards.scrollWidth+8;root.style.setProperty("--scale",String(Math.min(requestedScale,Math.max(.1,window.innerWidth/naturalWidth))));}
   window.addEventListener("resize",fitViewport);
   const publicImage = value => { try {const u=new URL(value); return u.protocol === "https:" && !["localhost","127.0.0.1","[::1]"].includes(u.hostname);} catch {return false;} };
@@ -14,8 +14,8 @@
   function image(src) {
     if (!images.has(src)) images.set(src,new Promise((resolve,reject) => {
       const img = new Image(); img.referrerPolicy="no-referrer";
-      const timeout=setTimeout(()=>reject(Error("Image timeout")),8000);
-      img.onload=()=>{clearTimeout(timeout);resolve(img);};img.onerror=()=>{clearTimeout(timeout);reject(Error("Image unavailable"));};img.src=src;
+      const timeout=setTimeout(()=>{images.delete(src);reject(Error("Image timeout"));},8000);
+      img.onload=()=>{clearTimeout(timeout);resolve(img);};img.onerror=()=>{clearTimeout(timeout);images.delete(src);reject(Error("Image unavailable"));};img.crossOrigin="anonymous";img.src=src;
     }));
     return images.get(src);
   }
@@ -76,8 +76,13 @@
     else {
       let gift=null;
       const data=giftImages[card.gift_image_key];
-      if(card.gift_id && typeof data==="string" && data.length<=25000 && /^data:image\/png;base64,[A-Za-z0-9+/]+=*$/.test(data)) {
-        try {gift=await image(data);}catch {console.warn(`Cached gift PNG could not load: ID ${card.gift_id}`);}
+      // Schema 4: immutable shared Storage URL. Legacy schema 3 stays readable
+      // during rollout; no sample gift asset fallback exists in either version.
+      const assetURL = data && typeof data==="object" && /^[0-9a-f]{64}$/.test(card.gift_image_key||"") &&
+        data.sha256===card.gift_image_key && data.url===`${api}/storage/v1/object/public/mnr-gift-artwork/sha256/${card.gift_image_key}.png` && publicImage(data.url) ? data.url : null;
+      const legacyPNG = typeof data==="string" && data.length<=25000 && /^data:image\/png;base64,[A-Za-z0-9+/]+=*$/.test(data) ? data : null;
+      if(card.gift_id && (assetURL||legacyPNG)) {
+        try {gift=await image(assetURL||legacyPNG);}catch {console.warn(`Cached gift PNG could not load: ID ${card.gift_id}`);}
       }
       if(gift){contain(ctx,gift,bottom);c.dataset.giftImage="loaded";c.dataset.giftId=card.gift_id;}
       else {
@@ -92,18 +97,33 @@
     const token=++generation,manifest=await manifestPromise;
     const nodes=await Promise.all((Array.isArray(payload.cards)?payload.cards:[]).map(card=>drawCard(card,manifest,payload.gift_images||{})));
     if(token!==generation)return;
-    lastPayload=serialized;
+    lastPayload=nodes.some(n=>n.dataset.giftImage==="missing")?"":serialized;
     requestedScale=Math.max(.5,Math.min(2,Number(payload.scale_percent||100)/100));
     title.hidden=!payload.show_title||!payload.title;title.textContent=payload.title||"";
     cards.replaceChildren(...nodes);fitViewport();root.dataset.ready="true";root.dataset.artworkReady=String(!nodes.some(n=>n.dataset.giftImage==="missing"));
   }
   async function refresh() {
-    if(!publicImage(api)||!anon||!channel||!read)return;
+    if(refreshing||!publicImage(api)||!anon||!channel||!read)return;
+    refreshing=true;
     try {
-      const response=await fetch(`${api}/rest/v1/rpc/read_mnr_overlay`,{method:"POST",cache:"no-store",headers:{apikey:anon,"Content-Type":"application/json"},body:JSON.stringify({p_channel_id:channel,p_read_token:read})});
-      if(!response.ok){console.warn(`Overlay read HTTP ${response.status}`);return;}
-      const payload=await response.json();if(payload&&typeof payload==="object")await render(payload);
+      const endpoint=legacyRead?"read_mnr_overlay":"read_mnr_overlay_update";
+      const body={p_channel_id:channel,p_read_token:read};if(!legacyRead)body.p_revision=revision;
+      const response=await fetch(`${api}/rest/v1/rpc/${endpoint}`,{method:"POST",cache:"no-store",signal:AbortSignal.timeout(10000),headers:{apikey:anon,"Content-Type":"application/json"},body:JSON.stringify(body)});
+      if(!response.ok){if(response.status===404)legacyRead=true;console.warn(`Overlay read HTTP ${response.status}`);return;}
+      const update=await response.json();
+      const payload=legacyRead?update:update?.payload;
+      if(payload&&typeof payload==="object"){
+        currentPayload=payload;
+        if(!legacyRead)revision=update.revision;
+        await render(payload);
+      }else if(currentPayload&&root.dataset.artworkReady!=="true"){
+        // Retry failed image loads using the config already in memory, without
+        // retransmitting all mappings on every poll during a CDN interruption.
+        await render(currentPayload);
+      }
     }catch(error){console.warn("Overlay refresh unavailable:",error.message);}
+    finally{refreshing=false;}
   }
+
   refresh();setInterval(refresh, 2000);
 })();
